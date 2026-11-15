@@ -114,6 +114,18 @@
     border-radius: 20px; background: var(--sage-tint); color: var(--sage-deep); white-space:nowrap;
   }
   .badge.warn{ background: var(--brick-tint); color: var(--brick); }
+  .medical-record-row{cursor:pointer}
+  .medical-record-row:focus td{outline:2px solid var(--sage);outline-offset:-2px}
+  .medical-record-row td:last-child::after{content:"＋";float:right;color:var(--sage-deep);font-weight:700;margin-left:8px}
+  .medical-record-row[aria-expanded="true"] td:last-child::after{content:"−"}
+  .medical-detail-row td{background:#FBF9F4;padding:14px 16px 16px}
+  .medical-detail-panel{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 18px}
+  .medical-detail-item{min-width:0}
+  .medical-detail-label{display:block;font:10px 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:3px}
+  .medical-detail-value{white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;color:var(--ink)}
+  .medical-detail-item.wide{grid-column:1/-1}
+  .medical-expand-hint{font-size:11px;color:var(--ink-soft);margin:0 0 8px}
+  @media(max-width:600px){.medical-detail-panel{grid-template-columns:1fr}.medical-detail-item.wide{grid-column:auto}}
 
   .empty{ text-align:center; color: var(--ink-soft); padding: 30px 10px; font-family:'Fraunces', serif; }
 
@@ -517,10 +529,26 @@
       ...(String(value).includes('T') ? {hour:'2-digit',minute:'2-digit'} : {})
     });
   }
+  function detailField(label,value,wide=false){
+    if(value===null||value===undefined||String(value).trim()==='') return '';
+    return `<div class="medical-detail-item ${wide?'wide':''}"><span class="medical-detail-label">${safe(label)}</span><div class="medical-detail-value">${safe(value)}</div></div>`;
+  }
+  function detailPanel(fields){
+    const content=fields.map(f=>detailField(f[0],f[1],f[2])).join('');
+    return `<div class="medical-detail-panel">${content || detailField('Detalle','Sin información adicional')}</div>`;
+  }
+  function expandableMedicalRow(cells,fields){
+    return `<tr class="medical-record-row" tabindex="0" role="button" aria-expanded="false"><td>${cells.join('</td><td>')}</td></tr><tr class="medical-detail-row" hidden><td colspan="${cells.length}">${detailPanel(fields)}</td></tr>`;
+  }
   function setMedicalTable(bodyId, emptyId, rows, rowHtml){
     const body = document.getElementById(bodyId);
     body.innerHTML = rows.map(rowHtml).join('');
     document.getElementById(emptyId).style.display = rows.length ? 'none' : 'block';
+    body.querySelectorAll('.medical-record-row').forEach(row=>{
+      const toggle=()=>{const detail=row.nextElementSibling;const open=row.getAttribute('aria-expanded')==='true';row.setAttribute('aria-expanded',String(!open));detail.hidden=open;};
+      row.addEventListener('click',toggle);
+      row.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();toggle();}});
+    });
   }
   function renderMedicalRecords(){
     const { from, to } = currentRange();
@@ -534,19 +562,34 @@
     const medications = MEDICAL.medications.filter(r => inRange(r.administered_at));
     const appointments = MEDICAL.appointments.filter(r => inRange(r.appointment_at));
     const examinations = MEDICAL.examinations.filter(r => inRange(r.examination_at));
-    setMedicalTable('eventsBody','eventsEmpty',events,r=>`<tr><td>${medicalDate(r.occurred_at)}</td><td>${safe(r.event_type)}</td><td>${safe(r.title)}</td><td>${safe(r.severity || '—')}</td><td>${safe(r.description || '—')}</td></tr>`);
+    setMedicalTable('eventsBody','eventsEmpty',events,r=>expandableMedicalRow(
+      [medicalDate(r.occurred_at),safe(r.event_type),safe(r.title),safe(r.severity || '—'),safe(r.description || '—')],
+      [['Fecha y hora',medicalDate(r.occurred_at)],['Tipo',r.event_type],['Gravedad',r.severity],['Cuidadora',r.caregiver_name],['Título',r.title],['Origen',r.source],['Descripción completa',r.description,true]]
+    ));
     setMedicalTable('measurementsBody','measurementsEmpty',measurements,r=>{
       const result = r.measurement_type === 'blood_pressure'
         ? `${safe(r.systolic)}/${safe(r.diastolic)} mmHg${r.pulse ? ` · pulso ${safe(r.pulse)}`:''}`
         : `${safe(r.value ?? '—')} ${safe(r.unit || '')}`;
-      return `<tr><td>${medicalDate(r.measured_at)}</td><td>${safe(r.measurement_type)}</td><td>${result}</td><td>${safe(r.notes || '—')}</td></tr>`;
+      return expandableMedicalRow(
+        [medicalDate(r.measured_at),safe(r.measurement_type),result,safe(r.notes || '—')],
+        [['Fecha y hora',medicalDate(r.measured_at)],['Tipo de medición',r.measurement_type],['Presión sistólica',r.systolic],['Presión diastólica',r.diastolic],['Pulso',r.pulse],['Valor',r.value],['Unidad',r.unit],['Notas',r.notes,true],['Cuidadora',r.caregiver_name]]
+      );
     });
-    setMedicalTable('medicationsBody','medicationsEmpty',medications,r=>`<tr><td>${medicalDate(r.administered_at)}</td><td>${safe(r.medication_name)}</td><td>${safe(r.dose || '—')}</td><td><span class="badge ${['missed','refused','held'].includes(r.status)?'warn':''}">${safe(r.status)}</span></td><td>${safe(r.notes || '—')}</td></tr>`);
+    setMedicalTable('medicationsBody','medicationsEmpty',medications,r=>expandableMedicalRow(
+      [medicalDate(r.administered_at),safe(r.medication_name),safe(r.dose || '—'),`<span class="badge ${['missed','refused','held'].includes(r.status)?'warn':''}">${safe(r.status)}</span>`,safe(r.notes || '—')],
+      [['Fecha y hora',medicalDate(r.administered_at)],['Medicamento',r.medication_name],['Dosis',r.dose],['Estado',r.status],['Cuidadora',r.caregiver_name],['Observaciones',r.notes,true]]
+    ));
     const combined = [
-      ...appointments.map(r=>({date:r.appointment_at,type:'Consulta',provider:r.clinician_name,summary:[r.specialty,r.reason,r.outcome_notes,r.follow_up_at ? 'Seguimiento: '+r.follow_up_at : ''].filter(Boolean).join(' · ')})),
-      ...examinations.map(r=>({date:r.examination_at,type:r.examination_type,provider:r.provider_name,summary:r.result_summary}))
+      ...appointments.map(r=>({date:r.appointment_at,type:'Consulta médica',provider:r.clinician_name,record:r})),
+      ...examinations.map(r=>({date:r.examination_at,type:'Examen',provider:r.provider_name,record:r}))
     ].sort((a,b)=>String(b.date).localeCompare(String(a.date)));
-    setMedicalTable('appointmentsBody','appointmentsEmpty',combined,r=>`<tr><td>${medicalDate(r.date)}</td><td>${safe(r.type)}</td><td>${safe(r.provider || '—')}</td><td>${safe(r.summary || '—')}</td></tr>`);
+    setMedicalTable('appointmentsBody','appointmentsEmpty',combined,r=>{
+      const x=r.record;
+      const fields=r.type==='Consulta médica'
+        ? [['Fecha y hora',medicalDate(x.appointment_at)],['Profesional',x.clinician_name],['Especialidad',x.specialty],['Motivo',x.reason,true],['Hallazgos y resultado',x.outcome_notes,true],['Seguimiento',x.follow_up_at?medicalDate(x.follow_up_at):null]]
+        : [['Fecha',medicalDate(x.examination_at)],['Tipo de examen',x.examination_type],['Centro o profesional',x.provider_name],['Resultado completo',x.result_summary,true],['Archivo',x.storage_path]];
+      return expandableMedicalRow([medicalDate(r.date),safe(r.type),safe(r.provider || '—'),safe(r.type==='Consulta médica'?(x.outcome_notes||x.reason||'—'):(x.result_summary||'—'))],fields);
+    });
   }
 
 
