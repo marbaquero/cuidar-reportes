@@ -12,14 +12,15 @@ This branch adds a separate, household-scoped medical record model for the exist
 
 Every record belongs to a `household_id`. RLS is enabled. Household members can read records in their own household; household owners with app access can create, update and delete. The existing household helper functions are reused, matching the current `care_reports` authorization pattern.
 
-## Frontend integration plan (not yet implemented)
-1. Keep the current Reporte Médico HTML/CSS unchanged as the visual baseline.
-2. Add a data-access layer that reads the five medical tables for the signed-in household.
-3. Preserve the current period selector, summary cards, caregiver grouping, table, and PDF export.
-4. Clearly label legacy daily-care observations separately from structured medical records.
-5. Do not infer medication adherence from free-text `care_reports.medicacion`. Show a medication status only when an explicit `medication_records.status` row exists.
-6. Keep the existing daily-care report link and Historial navigation.
-7. Do not backfill or migrate historical caregiver reports automatically. Any later import must be reviewed field-by-field and retain provenance as legacy caregiver observations.
+## Frontend integration (implemented on this branch)
+1. The Reporte Médico page keeps its existing CSS, typography, colors, period selector, summary cards, caregiver grouping, daily detail table, navigation and PDF print behavior.
+2. It now reads the five medical tables from the commercial Supabase project for the signed-in household.
+3. Structured medical records appear in matching card/table styling below the existing daily-care detail.
+4. The page checks for an owner session and an enabled `medico` app entitlement before loading the report.
+5. Medical table queries are household-scoped and capped at the latest 500 rows per table; the date selector filters the loaded records locally.
+6. Legacy medication free text is still shown only as a caregiver-reported observation. Structured medication status is shown only from explicit `medication_records` rows.
+7. The existing daily-care report link and Historial navigation remain unchanged.
+8. No historical caregiver reports are automatically backfilled into the medical tables.
 
 ## Important remaining checks before merge/deploy
 - Confirm whether caregivers should eventually be permitted to insert medical observations through a secure caregiver workflow. Current policies intentionally reserve writes to household owners.
@@ -31,6 +32,7 @@ Every record belongs to a `household_id`. RLS is enabled. Household members can 
 
 ## Current status
 - SQL migration draft is committed to `feature/medical-records-foundation`.
+- Reporte Médico frontend integration is committed to the same branch.
+- The migration enables RLS, grants authenticated access subject to RLS, and checks both active subscription and the explicit `medico` app entitlement.
 - No database migration has been applied.
-- No frontend files have been modified.
 - No production deployment has been made.
