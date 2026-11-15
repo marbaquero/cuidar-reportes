@@ -90,15 +90,15 @@ alter table public.medical_examinations enable row level security;
 
 -- Household members may read their own household's medical records.
 create policy medical_events_select_member on public.medical_events
-  for select to authenticated using (public.is_household_member(household_id));
+  for select to authenticated using (public.is_household_member(household_id) and public.has_app_access(household_id));
 create policy medical_measurements_select_member on public.medical_measurements
-  for select to authenticated using (public.is_household_member(household_id));
+  for select to authenticated using (public.is_household_member(household_id) and public.has_app_access(household_id));
 create policy medication_records_select_member on public.medication_records
-  for select to authenticated using (public.is_household_member(household_id));
+  for select to authenticated using (public.is_household_member(household_id) and public.has_app_access(household_id));
 create policy medical_appointments_select_member on public.medical_appointments
-  for select to authenticated using (public.is_household_member(household_id));
+  for select to authenticated using (public.is_household_member(household_id) and public.has_app_access(household_id));
 create policy medical_examinations_select_member on public.medical_examinations
-  for select to authenticated using (public.is_household_member(household_id));
+  for select to authenticated using (public.is_household_member(household_id) and public.has_app_access(household_id));
 
 -- Only household owners with medical-app entitlement may add or change medical records.
 create policy medical_events_insert_owner on public.medical_events
