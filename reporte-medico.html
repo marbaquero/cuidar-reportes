@@ -128,6 +128,21 @@
   }
   .howto b{ color: var(--ink); }
 
+
+  .medical-entry-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:14px 0 22px}
+  .medical-entry{border:1px solid var(--paper-line);border-radius:12px;padding:14px;background:var(--paper)}
+  .medical-entry summary{font-family:'Fraunces',serif;font-size:16px;font-weight:600;color:var(--sage-deep);cursor:pointer}
+  .medical-entry form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}
+  .medical-entry label{display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--ink-soft)}
+  .medical-entry input,.medical-entry select,.medical-entry textarea{width:100%;min-width:0;border:1px solid var(--paper-line);border-radius:8px;background:#fff;color:var(--ink);padding:9px;font:14px 'Work Sans',sans-serif}
+  .medical-entry textarea{min-height:66px;resize:vertical}
+  .medical-entry .wide{grid-column:1/-1}
+  .medical-entry button{grid-column:1/-1;justify-self:start;border:0;border-radius:9px;background:var(--sage-deep);color:#fff;padding:10px 15px;font:600 13px 'Work Sans',sans-serif;cursor:pointer}
+  .medical-entry button:disabled{opacity:.6;cursor:wait}
+  #medicalFormStatus{font-size:13px;margin:8px 0;color:var(--sage-deep)}
+  #medicalFormStatus.error{color:var(--brick)}
+  @media(max-width:700px){.medical-entry-grid{grid-template-columns:1fr}.medical-entry form{grid-template-columns:1fr}.medical-entry .wide{grid-column:auto}}
+
   .print-header{ display:none; }
 
   @media print{
@@ -218,6 +233,60 @@
     <h2>Registros médicos</h2>
     <p class="howto">Registros de salud documentados por separado de los reportes diarios de cuidado.</p>
     <div id="medicalLoadNote" class="howto" style="display:none;"></div>
+
+    <div id="medicalFormStatus" role="status" aria-live="polite"></div>
+    <div class="medical-entry-grid">
+      <details class="medical-entry"><summary>Registrar evento de salud</summary>
+        <form id="eventForm">
+          <label>Tipo<select name="event_type" required><option value="symptom">Síntoma</option><option value="incident">Incidente</option><option value="diagnosis">Diagnóstico</option><option value="other">Otro</option></select></label>
+          <label>Gravedad<select name="severity"><option value="">No especificada</option><option value="low">Leve</option><option value="moderate">Moderada</option><option value="high">Alta</option><option value="urgent">Urgente</option></select></label>
+          <label class="wide">Título<input name="title" maxlength="180" required></label>
+          <label>Fecha y hora<input name="occurred_at" type="datetime-local" required></label>
+          <label>Origen<select name="source"><option value="family">Familia</option><option value="caregiver">Cuidadora</option><option value="clinician">Profesional de salud</option></select></label>
+          <label class="wide">Detalle<textarea name="description"></textarea></label><button type="submit">Guardar evento</button>
+        </form>
+      </details>
+      <details class="medical-entry"><summary>Registrar medición</summary>
+        <form id="measurementForm">
+          <label>Medición<select name="measurement_type" id="measurementType" required><option value="blood_pressure">Presión arterial</option><option value="temperature">Temperatura</option><option value="weight">Peso</option><option value="blood_glucose">Glucosa</option><option value="oxygen_saturation">Saturación de oxígeno</option><option value="pulse">Pulso</option><option value="other">Otra</option></select></label>
+          <label>Fecha y hora<input name="measured_at" type="datetime-local" required></label>
+          <label class="measurement-value">Valor<input name="value" type="number" step="any"></label>
+          <label class="measurement-value">Unidad<input name="unit" placeholder="°C, kg, mg/dL, %"></label>
+          <label class="bp-field">Sistólica (mmHg)<input name="systolic" type="number" step="1"></label>
+          <label class="bp-field">Diastólica (mmHg)<input name="diastolic" type="number" step="1"></label>
+          <label class="wide">Pulso (opcional)<input name="pulse" type="number" step="1"></label>
+          <label class="wide">Notas<textarea name="notes"></textarea></label><button type="submit">Guardar medición</button>
+        </form>
+      </details>
+      <details class="medical-entry"><summary>Registrar administración de medicamento</summary>
+        <form id="medicationForm">
+          <label>Medicamento<input name="medication_name" maxlength="180" required></label>
+          <label>Dosis<input name="dose" placeholder="Ej. 20 mg"></label>
+          <label>Estado<select name="status" required><option value="administered">Administrado</option><option value="missed">No administrado</option><option value="refused">Rechazado</option><option value="held">Suspendido</option><option value="unknown">Desconocido</option></select></label>
+          <label>Fecha y hora<input name="administered_at" type="datetime-local" required></label>
+          <label class="wide">Notas<textarea name="notes"></textarea></label><button type="submit">Guardar medicamento</button>
+        </form>
+      </details>
+      <details class="medical-entry"><summary>Registrar consulta médica</summary>
+        <form id="appointmentForm">
+          <label>Fecha y hora<input name="appointment_at" type="datetime-local" required></label>
+          <label>Profesional<input name="clinician_name"></label>
+          <label>Especialidad<input name="specialty"></label>
+          <label>Próximo seguimiento<input name="follow_up_at" type="datetime-local"></label>
+          <label class="wide">Motivo<textarea name="reason"></textarea></label>
+          <label class="wide">Resultado / indicaciones<textarea name="outcome_notes"></textarea></label><button type="submit">Guardar consulta</button>
+        </form>
+      </details>
+      <details class="medical-entry"><summary>Registrar examen médico</summary>
+        <form id="examinationForm">
+          <label>Fecha<input name="examination_at" type="date" required></label>
+          <label>Tipo de examen<input name="examination_type" maxlength="180" required></label>
+          <label class="wide">Profesional / centro<input name="provider_name"></label>
+          <label class="wide">Resultado / resumen<textarea name="result_summary"></textarea></label><button type="submit">Guardar examen</button>
+        </form>
+      </details>
+    </div>
+
     <h3 style="font-family:'Fraunces',serif;font-size:16px;margin:18px 0 6px;">Eventos de salud</h3>
     <div class="tbl-wrap"><table><thead><tr><th>Fecha</th><th>Tipo</th><th>Evento</th><th>Gravedad</th><th>Detalle</th></tr></thead><tbody id="eventsBody"></tbody></table><div class="empty" id="eventsEmpty">No hay eventos médicos en este período.</div></div>
     <h3 style="font-family:'Fraunces',serif;font-size:16px;margin:18px 0 6px;">Mediciones</h3>
@@ -238,6 +307,7 @@
   let ALL = [];
   let CURRENT = [];
   let HOUSEHOLD_ID = null;
+  let CURRENT_SESSION = null;
   let MEDICAL = { events: [], measurements: [], medications: [], appointments: [], examinations: [] };
 
   function mapRow(r){
@@ -263,6 +333,7 @@
       return null;
     }
     HOUSEHOLD_ID = member.household_id;
+    CURRENT_SESSION = session;
     const { data: appAccess, error: accessError } = await sb.from('household_app_access')
       .select('app_key, is_enabled')
       .eq('household_id', HOUSEHOLD_ID)
@@ -477,6 +548,77 @@
     ].sort((a,b)=>String(b.date).localeCompare(String(a.date)));
     setMedicalTable('appointmentsBody','appointmentsEmpty',combined,r=>`<tr><td>${medicalDate(r.date)}</td><td>${safe(r.type)}</td><td>${safe(r.provider || '—')}</td><td>${safe(r.summary || '—')}</td></tr>`);
   }
+
+
+  function localDateTimeValue(date = new Date()){
+    const d = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+    return d.toISOString().slice(0,16);
+  }
+  function setFormDefaults(){
+    ['eventForm','measurementForm','medicationForm','appointmentForm'].forEach(id=>{
+      const form=document.getElementById(id);
+      const date=form && form.querySelector('input[type="datetime-local"]');
+      if(date && !date.value) date.value=localDateTimeValue();
+    });
+    const examDate=document.querySelector('#examinationForm input[name="examination_at"]');
+    if(examDate && !examDate.value) examDate.value=todayLocalISO();
+  }
+  function formPayload(form){
+    const data=Object.fromEntries(new FormData(form).entries());
+    Object.keys(data).forEach(key=>{if(data[key]==='') data[key]=null;});
+    return data;
+  }
+  function toIso(value){return value ? new Date(value).toISOString() : null;}
+  function setMedicalStatus(message,isError=false){
+    const el=document.getElementById('medicalFormStatus');
+    el.textContent=message;
+    el.classList.toggle('error',isError);
+  }
+  async function saveMedicalForm(formId,table,prepare){
+    const form=document.getElementById(formId);
+    form.addEventListener('submit',async event=>{
+      event.preventDefault();
+      if(!HOUSEHOLD_ID || !CURRENT_SESSION){setMedicalStatus('La sesión no está disponible. Inicie sesión nuevamente.',true);return;}
+      const button=form.querySelector('button[type="submit"]');
+      button.disabled=true;
+      setMedicalStatus('Guardando…');
+      try{
+        const payload=prepare(formPayload(form));
+        payload.household_id=HOUSEHOLD_ID;
+        payload.created_by=CURRENT_SESSION.user.id;
+        const {error}=await sb.from(table).insert(payload);
+        if(error) throw error;
+        form.reset();
+        setFormDefaults();
+        await loadMedicalRecords();
+        applyRange();
+        setMedicalStatus('Registro guardado correctamente.');
+      }catch(error){
+        console.error('Medical record save error:',error);
+        setMedicalStatus('No se pudo guardar el registro: '+(error.message || 'revise los permisos y la conexión.'),true);
+      }finally{button.disabled=false;}
+    });
+  }
+  saveMedicalForm('eventForm','medical_events',data=>({...data,occurred_at:toIso(data.occurred_at)}));
+  saveMedicalForm('measurementForm','medical_measurements',data=>{
+    const isBP=data.measurement_type==='blood_pressure';
+    return {...data,value:isBP?null:(data.value===null?null:Number(data.value)),unit:isBP?null:data.unit,
+      systolic:isBP&&data.systolic!==null?Number(data.systolic):null,
+      diastolic:isBP&&data.diastolic!==null?Number(data.diastolic):null,
+      pulse:data.pulse===null?null:Number(data.pulse),measured_at:toIso(data.measured_at)};
+  });
+  saveMedicalForm('medicationForm','medication_records',data=>({...data,administered_at:toIso(data.administered_at)}));
+  saveMedicalForm('appointmentForm','medical_appointments',data=>({...data,appointment_at:toIso(data.appointment_at),follow_up_at:toIso(data.follow_up_at)}));
+  saveMedicalForm('examinationForm','medical_examinations',data=>data);
+  const measurementType=document.getElementById('measurementType');
+  function toggleMeasurementFields(){
+    const bp=measurementType.value==='blood_pressure';
+    document.querySelectorAll('.bp-field').forEach(el=>el.style.display=bp?'flex':'none');
+    document.querySelectorAll('.measurement-value').forEach(el=>el.style.display=bp?'none':'flex');
+  }
+  measurementType.addEventListener('change',toggleMeasurementFields);
+  toggleMeasurementFields();
+  setFormDefaults();
 
   async function loadMedicalRecords(){
     const { from, to } = currentRange();
