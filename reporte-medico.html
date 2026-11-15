@@ -263,6 +263,17 @@
       return null;
     }
     HOUSEHOLD_ID = member.household_id;
+    const { data: appAccess, error: accessError } = await sb.from('household_app_access')
+      .select('app_key, is_enabled')
+      .eq('household_id', HOUSEHOLD_ID)
+      .eq('app_key', 'medico')
+      .eq('is_enabled', true)
+      .maybeSingle();
+    if (accessError || !appAccess) {
+      document.getElementById('empty').style.display = 'block';
+      document.getElementById('empty').textContent = 'Este hogar no tiene habilitada la aplicación Médico. Revise el plan y los accesos desde el portal.';
+      return null;
+    }
     const { data: profile } = await sb.from('app_kv_store')
       .select('value')
       .eq('household_id', HOUSEHOLD_ID)
@@ -429,7 +440,7 @@
   }
   function medicalDate(value){
     if (!value) return '—';
-    const d = new Date(value);
+    const d = new Date(String(value).length === 10 ? value + 'T12:00:00' : value);
     return Number.isNaN(d.getTime()) ? safe(value) : d.toLocaleString('es-EC', {
       day:'numeric', month:'short', year:'numeric',
       ...(String(value).includes('T') ? {hour:'2-digit',minute:'2-digit'} : {})
@@ -479,9 +490,8 @@
     const results = await Promise.all(specs.map(async ([key,table,dateCol]) => {
       const {data,error} = await sb.from(table).select('*')
         .eq('household_id', HOUSEHOLD_ID)
-        .gte(dateCol, from)
-        .lte(dateCol, key === 'examinations' ? to : to + 'T23:59:59.999Z')
-        .order(dateCol,{ascending:false});
+        .order(dateCol,{ascending:false})
+        .limit(500);
       if (error) {
         console.error('Medical records load error ('+table+'):', error);
         return {key,data:[],error};
