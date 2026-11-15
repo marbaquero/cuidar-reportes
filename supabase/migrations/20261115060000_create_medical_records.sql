@@ -88,9 +88,31 @@ alter table public.medication_records enable row level security;
 alter table public.medical_appointments enable row level security;
 alter table public.medical_examinations enable row level security;
 
+-- Restrict this feature to households explicitly entitled to the Médico app.
+create or replace function public.has_household_app_access(p_household uuid, p_app_key text)
+returns boolean
+language sql
+stable
+security invoker
+set search_path = ''
+as $function$
+  select exists (
+    select 1
+    from public.household_app_access haa
+    join public.app_catalog ac on ac.app_key = haa.app_key
+    where haa.household_id = p_household
+      and haa.app_key = p_app_key
+      and haa.is_enabled = true
+      and ac.is_active = true
+  );
+$function$;
+
+revoke all on function public.has_household_app_access(uuid, text) from public, anon;
+grant execute on function public.has_household_app_access(uuid, text) to authenticated;
+
 -- Household members may read their own household's medical records.
 create policy medical_events_select_member on public.medical_events
-  for select to authenticated using (public.is_household_member(household_id) and public.has_app_access(household_id));
+  for select to authenticated using (public.is_household_member(household_id) and public.has_app_access(household_id) and public.has_household_app_access(household_id, 'medico'));
 create policy medical_measurements_select_member on public.medical_measurements
   for select to authenticated using (public.is_household_member(household_id) and public.has_app_access(household_id));
 create policy medication_records_select_member on public.medication_records
@@ -103,7 +125,7 @@ create policy medical_examinations_select_member on public.medical_examinations
 -- Only household owners with medical-app entitlement may add or change medical records.
 create policy medical_events_insert_owner on public.medical_events
   for insert to authenticated with check (
-    public.is_household_owner(household_id) and public.has_app_access(household_id)
+    public.is_household_owner(household_id) and public.has_app_access(household_id) and public.has_household_app_access(household_id, 'medico')
     and created_by = (select auth.uid())
   );
 create policy medical_events_update_owner on public.medical_events
