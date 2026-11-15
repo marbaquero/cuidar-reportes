@@ -114,13 +114,13 @@ grant execute on function public.has_household_app_access(uuid, text) to authent
 create policy medical_events_select_member on public.medical_events
   for select to authenticated using (public.is_household_member(household_id) and public.has_app_access(household_id) and public.has_household_app_access(household_id, 'medico'));
 create policy medical_measurements_select_member on public.medical_measurements
-  for select to authenticated using (public.is_household_member(household_id) and public.has_app_access(household_id));
+  for select to authenticated using (public.is_household_member(household_id) and public.has_app_access(household_id) and public.has_household_app_access(household_id, 'medico'));
 create policy medication_records_select_member on public.medication_records
-  for select to authenticated using (public.is_household_member(household_id) and public.has_app_access(household_id));
+  for select to authenticated using (public.is_household_member(household_id) and public.has_app_access(household_id) and public.has_household_app_access(household_id, 'medico'));
 create policy medical_appointments_select_member on public.medical_appointments
-  for select to authenticated using (public.is_household_member(household_id) and public.has_app_access(household_id));
+  for select to authenticated using (public.is_household_member(household_id) and public.has_app_access(household_id) and public.has_household_app_access(household_id, 'medico'));
 create policy medical_examinations_select_member on public.medical_examinations
-  for select to authenticated using (public.is_household_member(household_id) and public.has_app_access(household_id));
+  for select to authenticated using (public.is_household_member(household_id) and public.has_app_access(household_id) and public.has_household_app_access(household_id, 'medico'));
 
 -- Only household owners with medical-app entitlement may add or change medical records.
 create policy medical_events_insert_owner on public.medical_events
@@ -130,77 +130,77 @@ create policy medical_events_insert_owner on public.medical_events
   );
 create policy medical_events_update_owner on public.medical_events
   for update to authenticated using (
-    public.is_household_owner(household_id) and public.has_app_access(household_id)
+    public.is_household_owner(household_id) and public.has_app_access(household_id) and public.has_household_app_access(household_id, 'medico')
   ) with check (
-    public.is_household_owner(household_id) and public.has_app_access(household_id)
+    public.is_household_owner(household_id) and public.has_app_access(household_id) and public.has_household_app_access(household_id, 'medico')
   );
 create policy medical_events_delete_owner on public.medical_events
   for delete to authenticated using (
-    public.is_household_owner(household_id) and public.has_app_access(household_id)
+    public.is_household_owner(household_id) and public.has_app_access(household_id) and public.has_household_app_access(household_id, 'medico')
   );
 
 create policy medical_measurements_insert_owner on public.medical_measurements
   for insert to authenticated with check (
-    public.is_household_owner(household_id) and public.has_app_access(household_id)
+    public.is_household_owner(household_id) and public.has_app_access(household_id) and public.has_household_app_access(household_id, 'medico')
     and created_by = (select auth.uid())
   );
 create policy medical_measurements_update_owner on public.medical_measurements
   for update to authenticated using (
-    public.is_household_owner(household_id) and public.has_app_access(household_id)
+    public.is_household_owner(household_id) and public.has_app_access(household_id) and public.has_household_app_access(household_id, 'medico')
   ) with check (
-    public.is_household_owner(household_id) and public.has_app_access(household_id)
+    public.is_household_owner(household_id) and public.has_app_access(household_id) and public.has_household_app_access(household_id, 'medico')
   );
 create policy medical_measurements_delete_owner on public.medical_measurements
   for delete to authenticated using (
-    public.is_household_owner(household_id) and public.has_app_access(household_id)
+    public.is_household_owner(household_id) and public.has_app_access(household_id) and public.has_household_app_access(household_id, 'medico')
   );
 
 create policy medication_records_insert_owner on public.medication_records
   for insert to authenticated with check (
-    public.is_household_owner(household_id) and public.has_app_access(household_id)
+    public.is_household_owner(household_id) and public.has_app_access(household_id) and public.has_household_app_access(household_id, 'medico')
     and created_by = (select auth.uid())
   );
 create policy medication_records_update_owner on public.medication_records
   for update to authenticated using (
-    public.is_household_owner(household_id) and public.has_app_access(household_id)
+    public.is_household_owner(household_id) and public.has_app_access(household_id) and public.has_household_app_access(household_id, 'medico')
   ) with check (
-    public.is_household_owner(household_id) and public.has_app_access(household_id)
+    public.is_household_owner(household_id) and public.has_app_access(household_id) and public.has_household_app_access(household_id, 'medico')
   );
 create policy medication_records_delete_owner on public.medication_records
   for delete to authenticated using (
-    public.is_household_owner(household_id) and public.has_app_access(household_id)
+    public.is_household_owner(household_id) and public.has_app_access(household_id) and public.has_household_app_access(household_id, 'medico')
   );
 
 create policy medical_appointments_insert_owner on public.medical_appointments
   for insert to authenticated with check (
-    public.is_household_owner(household_id) and public.has_app_access(household_id)
+    public.is_household_owner(household_id) and public.has_app_access(household_id) and public.has_household_app_access(household_id, 'medico')
     and created_by = (select auth.uid())
   );
 create policy medical_appointments_update_owner on public.medical_appointments
   for update to authenticated using (
-    public.is_household_owner(household_id) and public.has_app_access(household_id)
+    public.is_household_owner(household_id) and public.has_app_access(household_id) and public.has_household_app_access(household_id, 'medico')
   ) with check (
-    public.is_household_owner(household_id) and public.has_app_access(household_id)
+    public.is_household_owner(household_id) and public.has_app_access(household_id) and public.has_household_app_access(household_id, 'medico')
   );
 create policy medical_appointments_delete_owner on public.medical_appointments
   for delete to authenticated using (
-    public.is_household_owner(household_id) and public.has_app_access(household_id)
+    public.is_household_owner(household_id) and public.has_app_access(household_id) and public.has_household_app_access(household_id, 'medico')
   );
 
 create policy medical_examinations_insert_owner on public.medical_examinations
   for insert to authenticated with check (
-    public.is_household_owner(household_id) and public.has_app_access(household_id)
+    public.is_household_owner(household_id) and public.has_app_access(household_id) and public.has_household_app_access(household_id, 'medico')
     and created_by = (select auth.uid())
   );
 create policy medical_examinations_update_owner on public.medical_examinations
   for update to authenticated using (
-    public.is_household_owner(household_id) and public.has_app_access(household_id)
+    public.is_household_owner(household_id) and public.has_app_access(household_id) and public.has_household_app_access(household_id, 'medico')
   ) with check (
-    public.is_household_owner(household_id) and public.has_app_access(household_id)
+    public.is_household_owner(household_id) and public.has_app_access(household_id) and public.has_household_app_access(household_id, 'medico')
   );
 create policy medical_examinations_delete_owner on public.medical_examinations
   for delete to authenticated using (
-    public.is_household_owner(household_id) and public.has_app_access(household_id)
+    public.is_household_owner(household_id) and public.has_app_access(household_id) and public.has_household_app_access(household_id, 'medico')
   );
 
 grant select, insert, update, delete on public.medical_events to authenticated;
